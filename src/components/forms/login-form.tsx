@@ -8,11 +8,11 @@ export function LoginForm() {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  const handleGoogleLogin = (role: "ADMIN" | "SUPERVISOR") => {
+  const handleGoogleLogin = () => {
     setError(null);
     startTransition(async () => {
       try {
-        await loginWithGoogleAction(role);
+        await loginWithGoogleAction();
       } catch (err) {
         console.error("Google sign in failed:", err);
         setError("Could not initiate Google Authentication. Please try again.");
@@ -42,7 +42,7 @@ export function LoginForm() {
 
         {/* Builder (Admin) Option */}
         <button
-          onClick={() => handleGoogleLogin("ADMIN")}
+          onClick={handleGoogleLogin}
           disabled={isPending}
           className="group flex w-full items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-4 text-left shadow-soft hover:bg-slate-50 hover:border-amber-500/50 hover:ring-2 hover:ring-amber-500/10 transition-all disabled:opacity-50 cursor-pointer"
         >
@@ -81,7 +81,7 @@ export function LoginForm() {
 
         {/* Supervisor Option */}
         <button
-          onClick={() => handleGoogleLogin("SUPERVISOR")}
+          onClick={handleGoogleLogin}
           disabled={isPending}
           className="group flex w-full items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-4 text-left shadow-soft hover:bg-slate-50 hover:border-amber-500/50 hover:ring-2 hover:ring-amber-500/10 transition-all disabled:opacity-50 cursor-pointer"
         >

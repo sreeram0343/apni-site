@@ -20,12 +20,13 @@ export async function GET() {
     // Try a simple count query to verify database connectivity
     const userCount = await db.user.count();
     dbConnection = `SUCCESS! Connected. User count in database: ${userCount}`;
-  } catch (err: any) {
+  } catch (err) {
+    const error = err as Error & { code?: string };
     dbConnection = "FAILED";
     dbError = {
-      message: err.message || "Unknown error",
-      code: err.code || "No code",
-      stack: err.stack ? err.stack.split("\n").slice(0, 3).join("\n") : "No stack"
+      message: error.message || "Unknown error",
+      code: error.code || "No code",
+      stack: error.stack ? error.stack.split("\n").slice(0, 3).join("\n") : "No stack"
     };
   }
 
