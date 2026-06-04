@@ -37,19 +37,23 @@ export async function loginAction(formData: Record<string, string>) {
 
   try {
     // Automatically provision user in the database (Self-seeding)
-    await db.user.upsert({
-      where: { email: normalizedEmail },
-      update: {
-        name: demoUser.name,
-        role: demoUser.role,
-      },
-      create: {
-        id: demoUser.id,
-        name: demoUser.name,
-        email: normalizedEmail,
-        role: demoUser.role,
-      },
-    });
+    try {
+      await db.user.upsert({
+        where: { email: normalizedEmail },
+        update: {
+          name: demoUser.name,
+          role: demoUser.role,
+        },
+        create: {
+          id: demoUser.id,
+          name: demoUser.name,
+          email: normalizedEmail,
+          role: demoUser.role,
+        },
+      });
+    } catch (dbErr) {
+      console.warn("WARNING: Database self-seeding failed, proceeding with session anyway. Error:", dbErr);
+    }
 
     const cookieStore = await cookies();
     cookieStore.set(SESSION_COOKIE_NAME, encodeURIComponent(JSON.stringify(user)), {
