@@ -16,6 +16,14 @@ try {
   console.log("Switching Prisma provider to postgresql for production build...");
   fs.writeFileSync(schemaPath, postgresSchema, "utf8");
 
+  console.log("Running prisma db push to sync database schema...");
+  try {
+    execSync("npx prisma db push --accept-data-loss", { stdio: "inherit" });
+    console.log("Prisma db push completed successfully.");
+  } catch (dbError) {
+    console.warn("WARNING: prisma db push failed. If DATABASE_URL is not set yet, set it in Netlify settings. Error:", dbError.message);
+  }
+
   console.log("Running prisma generate...");
   execSync("npx prisma generate", { stdio: "inherit" });
 
