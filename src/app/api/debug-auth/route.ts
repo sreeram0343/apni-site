@@ -2,8 +2,29 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 
 export async function GET() {
+  const getUrlDebugInfo = (url: string | undefined) => {
+    if (!url) return "UNDEFINED";
+    try {
+      // Parse the connection string, taking care of postgresql:// format
+      const parsed = new URL(url);
+      return {
+        protocol: parsed.protocol,
+        host: parsed.hostname,
+        port: parsed.port,
+        pathname: parsed.pathname,
+        search: parsed.search,
+        hasPassword: !!parsed.password,
+        hasUsername: !!parsed.username,
+      };
+    } catch (e) {
+      // If parsing fails, return a safe masked version
+      return "Invalid URL format: " + url.substring(0, 20) + "...";
+    }
+  };
+
   const envStatus = {
-    DATABASE_URL: process.env.DATABASE_URL ? "Defined (Starts with: " + process.env.DATABASE_URL.substring(0, 15) + "...)" : "UNDEFINED",
+    DATABASE_URL: getUrlDebugInfo(process.env.DATABASE_URL),
+    DIRECT_URL: getUrlDebugInfo(process.env.DIRECT_URL),
     AUTH_SECRET: process.env.AUTH_SECRET ? "Defined" : "UNDEFINED",
     NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET ? "Defined" : "UNDEFINED",
     AUTH_GOOGLE_ID: process.env.AUTH_GOOGLE_ID ? "Defined" : "UNDEFINED",
