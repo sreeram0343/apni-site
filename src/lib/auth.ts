@@ -32,8 +32,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               user.role = signupRole;
             }
           }
-          // Clean up the cookie
-          cookieStore.delete("signup_role");
         }
       } catch (err) {
         console.error("Error setting role during signIn callback:", err);
