@@ -1,14 +1,14 @@
-import { auth } from "@/lib/auth";
+import { getServerSession } from "@/auth/server-session";
 import { redirect } from "next/navigation";
 
 export default async function IndexPage() {
-  const session = await auth();
+  const session = await getServerSession();
 
-  if (!session || !session.user) {
+  if (!session) {
     redirect("/login");
   }
 
-  if (session.user.role === "ADMIN") {
+  if (session.role === "BUILDER_ADMIN") {
     redirect("/dashboard/admin");
   } else {
     redirect("/dashboard/supervisor");

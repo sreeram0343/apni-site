@@ -1,4 +1,4 @@
-import { getReportDetail } from "@/lib/actions/reports";
+import { getReportDetail } from "@/lib/queries/reports";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Calendar, User, CheckCircle2, ClipboardList, Package, Users, Clock } from "lucide-react";
@@ -200,7 +200,7 @@ export default async function ReportDetailPage({ params }: ReportDetailPageProps
               Attendance Photo
             </h3>
             <ImageGallery
-              images={[{ label: "Attendance Photo", src: report.attendancePhoto }]}
+              images={report.attendancePhoto ? [{ label: "Attendance Photo", src: report.attendancePhoto }] : []}
               gridClassName="grid grid-cols-1"
             />
           </div>

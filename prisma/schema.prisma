@@ -1,7 +1,7 @@
 datasource db {
   provider  = "postgresql"
-  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
+  url      = env("DATABASE_URL")
 }
 
 generator client {
@@ -14,7 +14,7 @@ model User {
   email         String        @unique
   emailVerified DateTime?
   image         String?
-  role          String        @default("SUPERVISOR") // "ADMIN" or "SUPERVISOR"
+  role          String        @default("SITE_SUPERVISOR") // "BUILDER_ADMIN" or "SITE_SUPERVISOR"
   accounts      Account[]
   sessions      Session[]
   reports       DailyReport[]
@@ -28,12 +28,12 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -63,7 +63,7 @@ model DailyReport {
   workersPresent  Int
   tasksCompleted  String // Stored as newline-separated achievements
   materialsUsed   String // Stored as newline-separated items
-  attendancePhoto String // Local URL path
+  attendancePhoto String? // Local URL path
   progressPhoto1  String? // Local URL path (optional)
   progressPhoto2  String? // Local URL path (optional)
   supervisorId    String

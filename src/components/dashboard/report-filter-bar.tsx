@@ -1,14 +1,17 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Search, SlidersHorizontal } from "lucide-react";
 
-export function ReportFilterBar() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+interface ReportFilterBarProps {
+  initialSearch?: string;
+}
 
-  const [search, setSearch] = useState(searchParams.get("search") || "");
+export function ReportFilterBar({ initialSearch = "" }: ReportFilterBarProps) {
+  const router = useRouter();
+
+  const [search, setSearch] = useState(initialSearch);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();

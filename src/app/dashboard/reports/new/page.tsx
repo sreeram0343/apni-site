@@ -1,6 +1,18 @@
 import { DailyReportForm } from "@/components/forms/report-form";
+import { getServerSession } from "@/auth/server-session";
+import { redirect } from "next/navigation";
 
-export default function NewReportPage() {
+export default async function NewReportPage() {
+  const session = await getServerSession();
+
+  if (!session) {
+    redirect("/login");
+  }
+
+  if (session.role !== "SITE_SUPERVISOR") {
+    redirect("/dashboard/admin");
+  }
+
   return (
     <div className="max-w-3xl mx-auto space-y-6 animate-fade-in">
       <div>

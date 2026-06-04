@@ -1,10 +1,17 @@
-import { getDashboardStats } from "@/lib/actions/reports";
+import { getDashboardStats } from "@/lib/queries/reports";
 import { StatsCards } from "@/components/dashboard/stats-cards";
 import { RecentTable } from "@/components/dashboard/recent-table";
+import { getServerSession } from "@/auth/server-session";
+import { redirect } from "next/navigation";
 
 export const revalidate = 0; // Dynamic server-side rendering
 
 export default async function AdminDashboardPage() {
+  const session = await getServerSession();
+  if (!session || session.role !== "BUILDER_ADMIN") {
+    redirect("/login");
+  }
+
   const { 
     totalReports, 
     todaysWorkers, 

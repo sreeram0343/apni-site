@@ -2,11 +2,28 @@
 
 import { db } from "@/lib/db";
 import { Prisma } from "@prisma/client";
-import { auth } from "@/lib/auth";
+import { getServerSession } from "@/auth/server-session";
 import { revalidatePath } from "next/cache";
 import fs from "fs/promises";
 import path from "path";
-import { reportSchema } from "@/lib/validations";
+import { reportServerSchema } from "@/lib/validations";
+
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+
+function validateImageFile(file: File | null): string | null {
+  if (!file || file.size === 0) return null;
+
+  if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
+    return "Only JPG, PNG, or WEBP image uploads are allowed.";
+  }
+
+  if (file.size > MAX_IMAGE_SIZE) {
+    return "Each uploaded image must be 5MB or smaller.";
+  }
+
+  return null;
+}
 
 // Helper to save uploaded file
 async function saveFile(file: File | null): Promise<string | null> {
@@ -15,21 +32,21 @@ async function saveFile(file: File | null): Promise<string | null> {
   const bytes = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);
 
-  const uploadDir = path.join(process.cwd(), "public", "uploads");
+  const uploadDir = path.join(process.cwd(), "public", "uploads", "reports");
   await fs.mkdir(uploadDir, { recursive: true });
 
   const ext = path.extname(file.name) || ".jpg";
   const name = path.basename(file.name, ext).replace(/[^a-zA-Z0-9]/g, "_");
-  const filename = `${Date.now()}_${name}${ext}`;
+  const filename = `${Date.now()}_${crypto.randomUUID()}_${name}${ext.toLowerCase()}`;
   const filepath = path.join(uploadDir, filename);
 
   await fs.writeFile(filepath, buffer);
-  return `/uploads/${filename}`;
+  return `/uploads/reports/${filename}`;
 }
 
 export async function createReportAction(formData: FormData) {
-  const session = await auth();
-  if (!session || !session.user || session.user.role !== "SUPERVISOR") {
+  const session = await getServerSession();
+  if (!session || session.role !== "SITE_SUPERVISOR") {
     return { error: "Unauthorized. Only supervisors can submit reports." };
   }
 
@@ -41,11 +58,20 @@ export async function createReportAction(formData: FormData) {
   const progressPhoto1File = formData.get("progressPhoto1") as File | null;
   const progressPhoto2File = formData.get("progressPhoto2") as File | null;
 
-  const parsedData = reportSchema.safeParse({
+  const uploadError =
+    validateImageFile(attendancePhotoFile) ||
+    validateImageFile(progressPhoto1File) ||
+    validateImageFile(progressPhoto2File);
+
+  if (uploadError) {
+    return { error: uploadError };
+  }
+
+  const parsedData = reportServerSchema.safeParse({
     workersPresent,
     tasksCompleted,
     materialsUsed,
-    attendancePhoto: attendancePhotoFile && attendancePhotoFile.size > 0 ? "provided" : "",
+    attendancePhoto: attendancePhotoFile && attendancePhotoFile.size > 0 ? "provided" : undefined,
     progressPhoto1: progressPhoto1File && progressPhoto1File.size > 0 ? "provided" : undefined,
     progressPhoto2: progressPhoto2File && progressPhoto2File.size > 0 ? "provided" : undefined,
   });
@@ -58,22 +84,18 @@ export async function createReportAction(formData: FormData) {
 
   try {
     const attendancePhotoPath = await saveFile(attendancePhotoFile);
-    if (!attendancePhotoPath) {
-      return { error: "Attendance photo upload is required." };
-    }
-
     const progressPhoto1Path = await saveFile(progressPhoto1File);
     const progressPhoto2Path = await saveFile(progressPhoto2File);
 
-    await db.dailyReport.create({
+    const report = await db.dailyReport.create({
       data: {
-        workersPresent: Number(workersPresent),
-        tasksCompleted,
-        materialsUsed,
+        workersPresent: parsedData.data.workersPresent,
+        tasksCompleted: parsedData.data.tasksCompleted,
+        materialsUsed: parsedData.data.materialsUsed,
         attendancePhoto: attendancePhotoPath,
         progressPhoto1: progressPhoto1Path,
         progressPhoto2: progressPhoto2Path,
-        supervisorId: session.user.id,
+        supervisorId: session.id,
       },
     });
 
@@ -81,141 +103,9 @@ export async function createReportAction(formData: FormData) {
     revalidatePath("/dashboard/supervisor");
     revalidatePath("/dashboard/reports");
 
-    return { success: true };
+    return { success: true, reportId: report.id };
   } catch (error) {
     console.error("Failed to create report:", error);
     return { error: "Failed to submit daily report. Please try again." };
   }
-}
-
-export async function getDashboardStats() {
-  const session = await auth();
-  if (!session || !session.user) {
-    throw new Error("Unauthorized");
-  }
-
-  const isAdmin = session.user.role === "ADMIN";
-  const userId = session.user.id;
-
-  const startOfToday = new Date();
-  startOfToday.setHours(0, 0, 0, 0);
-
-  const endOfToday = new Date();
-  endOfToday.setHours(23, 59, 59, 999);
-
-  const filterQuery = isAdmin ? {} : { supervisorId: userId };
-  const filterQueryToday = isAdmin 
-    ? { date: { gte: startOfToday, lte: endOfToday } } 
-    : { supervisorId: userId, date: { gte: startOfToday, lte: endOfToday } };
-
-  const [totalReports, reportsToday, recentReports, activeSupervisors] = await Promise.all([
-    db.dailyReport.count({ where: filterQuery }),
-    db.dailyReport.findMany({
-      where: filterQueryToday,
-      select: { workersPresent: true },
-    }),
-    db.dailyReport.findMany({
-      where: filterQuery,
-      include: {
-        supervisor: { select: { name: true } },
-      },
-      orderBy: { date: "desc" },
-      take: 5,
-    }),
-    db.user.count({ where: { role: "SUPERVISOR" } }),
-  ]);
-
-  const todaysWorkers = reportsToday.reduce((sum, r) => sum + r.workersPresent, 0);
-  const reportsSubmittedToday = reportsToday.length;
-
-  return {
-    totalReports,
-    todaysWorkers,
-    reportsSubmittedToday,
-    recentReports,
-    activeSupervisors,
-  };
-}
-
-export async function getReportsList(params: {
-  page?: number;
-  limit?: number;
-  search?: string;
-}) {
-  const session = await auth();
-  if (!session || !session.user) {
-    throw new Error("Unauthorized");
-  }
-
-  const isAdmin = session.user.role === "ADMIN";
-  const userId = session.user.id;
-  
-  const page = params.page || 1;
-  const limit = params.limit || 8;
-  const skip = (page - 1) * limit;
-
-  const where: Prisma.DailyReportWhereInput = {};
-
-  if (!isAdmin) {
-    where.supervisorId = userId;
-  }
-
-  if (params.search) {
-    where.OR = [
-      { tasksCompleted: { contains: params.search } },
-      { materialsUsed: { contains: params.search } },
-      { supervisor: { name: { contains: params.search } } },
-    ];
-  }
-
-  const [reports, totalCount] = await Promise.all([
-    db.dailyReport.findMany({
-      where,
-      include: {
-        supervisor: { select: { name: true } },
-      },
-      orderBy: { date: "desc" },
-      skip,
-      take: limit,
-    }),
-    db.dailyReport.count({ where }),
-  ]);
-
-  const totalPages = Math.ceil(totalCount / limit);
-
-  return {
-    reports,
-    meta: {
-      totalCount,
-      totalPages,
-      currentPage: page,
-    },
-  };
-}
-
-export async function getReportDetail(id: string) {
-  const session = await auth();
-  if (!session || !session.user) {
-    throw new Error("Unauthorized");
-  }
-
-  const isAdmin = session.user.role === "ADMIN";
-  const userId = session.user.id;
-
-  const report = await db.dailyReport.findUnique({
-    where: { id },
-    include: {
-      supervisor: { select: { name: true, email: true } },
-    },
-  });
-
-  if (!report) {
-    return null;
-  }
-
-  if (!isAdmin && report.supervisorId !== userId) {
-    throw new Error("Access Denied");
-  }
-
-  return report;
 }

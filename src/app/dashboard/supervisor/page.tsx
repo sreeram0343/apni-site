@@ -1,19 +1,22 @@
-import { getDashboardStats } from "@/lib/actions/reports";
-import { auth } from "@/lib/auth";
+import { getDashboardStats } from "@/lib/queries/reports";
+import { getServerSession } from "@/auth/server-session";
 import { StatsCards } from "@/components/dashboard/stats-cards";
 import { RecentTable } from "@/components/dashboard/recent-table";
 import Link from "next/link";
 import { PlusCircle, Calendar } from "lucide-react";
+import { redirect } from "next/navigation";
 
 export const revalidate = 0; // Dynamic server-side rendering
 
 export default async function SupervisorDashboardPage() {
-  const [session, stats] = await Promise.all([
-    auth(),
-    getDashboardStats(),
-  ]);
+  const session = await getServerSession();
+  if (!session || session.role !== "SITE_SUPERVISOR") {
+    redirect("/login");
+  }
 
-  const firstName = session?.user?.name ? session.user.name.split(" ")[0] : "Supervisor";
+  const stats = await getDashboardStats();
+
+  const firstName = session?.name ? session.name.split(" ")[0] : "Supervisor";
 
   return (
     <div className="space-y-8 animate-fade-in max-w-5xl">

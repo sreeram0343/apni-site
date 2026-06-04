@@ -92,10 +92,6 @@ export function DailyReportForm() {
 
   const onSubmit = (data: ReportFormValues) => {
     const attendanceFile = files.attendance;
-    if (!attendanceFile) {
-      setError("Attendance Photo is required");
-      return;
-    }
 
     setError(null);
     startTransition(async () => {
@@ -103,7 +99,10 @@ export function DailyReportForm() {
       formData.append("workersPresent", String(data.workersPresent));
       formData.append("tasksCompleted", data.tasksCompleted);
       formData.append("materialsUsed", data.materialsUsed);
-      formData.append("attendancePhoto", attendanceFile);
+
+      if (attendanceFile) {
+        formData.append("attendancePhoto", attendanceFile);
+      }
 
       const progress1File = files.progress1;
       if (progress1File) {
@@ -119,7 +118,7 @@ export function DailyReportForm() {
       if (result && result.error) {
         setError(result.error);
       } else {
-        router.push("/dashboard/supervisor");
+        router.push(result.reportId ? `/dashboard/reports/${result.reportId}` : "/dashboard/supervisor");
         router.refresh();
       }
     });
@@ -223,7 +222,7 @@ export function DailyReportForm() {
           {/* Attendance Photo slot */}
           <div className="space-y-2">
             <label className="text-xs font-bold text-slate-700 tracking-wide">
-              Attendance Photo *
+              Attendance Photo
             </label>
             <div className="relative">
               <input
@@ -256,6 +255,7 @@ export function DailyReportForm() {
                 >
                   <Camera className="h-6 w-6 text-slate-400 mb-2" />
                   <span className="text-xs text-slate-500 font-bold">Upload Photo</span>
+                  <span className="text-3xs text-slate-400 mt-1 font-semibold">Optional</span>
                 </label>
               )}
             </div>

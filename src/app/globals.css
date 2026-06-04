@@ -5,6 +5,16 @@
   --font-sans: 'Inter', sans-serif;
   --color-amber-accent: #fbbf24;
   --color-slate-sidebar: #0f172a;
+  --color-slate-350: #94a3b8;
+  --color-slate-355: #94a3b8;
+  --color-slate-450: #64748b;
+  --color-slate-650: #475569;
+  --color-slate-850: #172033;
+  --color-slate-955: #020617;
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 0.95rem;
+  --text-3xs: 0.625rem;
+  --text-3xs--line-height: 0.85rem;
 }
 
 :root {

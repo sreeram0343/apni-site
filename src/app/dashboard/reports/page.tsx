@@ -1,8 +1,9 @@
-import { getReportsList } from "@/lib/actions/reports";
-import { auth } from "@/lib/auth";
+import { getReportsList } from "@/lib/queries/reports";
+import { getServerSession } from "@/auth/server-session";
 import { ReportFilterBar } from "@/components/dashboard/report-filter-bar";
 import Link from "next/link";
 import { Calendar, User, Users, Eye, PlusCircle, ArrowLeft, ArrowRight, Clipboard } from "lucide-react";
+import { redirect } from "next/navigation";
 
 interface ReportsPageProps {
   searchParams: Promise<{
@@ -18,12 +19,14 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
   const page = Number(params.page) || 1;
   const search = params.search || "";
 
-  const [session, { reports, meta }] = await Promise.all([
-    auth(),
-    getReportsList({ page, limit: 8, search }),
-  ]);
+  const session = await getServerSession();
+  if (!session) {
+    redirect("/login");
+  }
 
-  const isSupervisor = session?.user?.role === "SUPERVISOR";
+  const { reports, meta } = await getReportsList({ page, limit: 8, search });
+
+  const isSupervisor = session.role === "SITE_SUPERVISOR";
 
   const buildPageUrl = (targetPage: number) => {
     const query = new URLSearchParams();
@@ -58,7 +61,7 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
         )}
       </div>
 
-      <ReportFilterBar />
+      <ReportFilterBar initialSearch={search} />
 
       {reports.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-16 text-center shadow-card">

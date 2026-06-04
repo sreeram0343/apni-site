@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { getServerSession } from "@/auth/server-session";
 import { Sidebar } from "@/components/layout/sidebar";
 import { redirect } from "next/navigation";
 import { Calendar, Bell } from "lucide-react";
@@ -8,15 +8,15 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await auth();
+  const session = await getServerSession();
 
-  if (!session || !session.user) {
+  if (!session) {
     redirect("/login");
   }
 
   // Generate initials for avatar
-  const initials = session.user.name
-    ? session.user.name
+  const initials = session.name
+    ? session.name
         .split(" ")
         .map((n) => n[0])
         .join("")
@@ -32,7 +32,7 @@ export default async function DashboardLayout({
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col md:flex-row font-sans">
-      <Sidebar role={session.user.role} userName={session.user.name} />
+      <Sidebar role={session.role} userName={session.name || ""} />
       
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col pt-16 md:pt-0 md:pl-64 min-w-0">
@@ -63,10 +63,10 @@ export default async function DashboardLayout({
             <div className="flex items-center gap-3 border-l border-slate-200 pl-4 h-8">
               <div className="text-right hidden sm:block">
                 <span className="block text-xs font-extrabold text-slate-900 leading-tight">
-                  {session.user.name}
+                  {session.name}
                 </span>
                 <span className="block text-3xs font-semibold text-slate-400 mt-0.5">
-                  {session.user.role === "ADMIN" ? "Builder" : "Supervisor"}
+                  {session.role === "BUILDER_ADMIN" ? "Builder" : "Supervisor"}
                 </span>
               </div>
               <div className="h-9 w-9 rounded-full bg-slate-900 text-amber-400 border border-slate-800 flex items-center justify-center text-xs font-bold shadow-soft select-none">

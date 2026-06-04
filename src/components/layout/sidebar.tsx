@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { logoutAction } from "@/lib/actions/auth";
+import { useAuth } from "@/auth/auth-context";
 import { 
   HardHat, 
   LayoutDashboard, 
@@ -21,11 +22,13 @@ interface SidebarProps {
 
 export function Sidebar({ role }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+  const { logout } = useAuth();
 
   const menuItems = [
     { 
-      href: role === "ADMIN" ? "/dashboard/admin" : "/dashboard/supervisor", 
+      href: role === "BUILDER_ADMIN" ? "/dashboard/admin" : "/dashboard/supervisor", 
       label: "Dashboard", 
       icon: LayoutDashboard 
     },
@@ -43,12 +46,15 @@ export function Sidebar({ role }: SidebarProps) {
   ];
 
   const filteredItems = menuItems.filter(item => {
-    if (item.supervisorOnly && role !== "SUPERVISOR") return false;
+    if (item.supervisorOnly && role !== "SITE_SUPERVISOR") return false;
     return true;
   });
 
   const handleLogout = async () => {
     await logoutAction();
+    logout();
+    router.push("/login");
+    router.refresh();
   };
 
   return (

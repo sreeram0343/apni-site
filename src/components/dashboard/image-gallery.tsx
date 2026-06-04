@@ -39,7 +39,7 @@ export function ImageGallery({
             <img
               src={img.src}
               alt={img.label}
-              className="h-full w-full object-cover transition-transform duration-350 group-hover:scale-105"
+              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
             <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
               <span className="inline-flex items-center gap-1 rounded-lg bg-amber-500 px-3.5 py-1.5 text-xs font-bold text-slate-950 shadow-md">
