@@ -5,6 +5,20 @@ const { execSync } = require("child_process");
 const schemaPath = path.join(__dirname, "../prisma/schema.prisma");
 const originalSchema = fs.readFileSync(schemaPath, "utf8");
 
+// Setup dummy env vars for build phase if they are missing to satisfy Prisma validation
+const hasDatabaseUrl = !!process.env.DATABASE_URL;
+const hasDirectUrl = !!process.env.DIRECT_URL;
+
+if (!hasDatabaseUrl) {
+  console.log("No DATABASE_URL found in environment. Using dummy URL for build compilation...");
+  process.env.DATABASE_URL = "postgresql://postgres:dummy@localhost:5432/postgres";
+}
+
+if (!hasDirectUrl) {
+  console.log("No DIRECT_URL found in environment. Using DATABASE_URL as fallback for build compilation...");
+  process.env.DIRECT_URL = process.env.DATABASE_URL;
+}
+
 // Swap provider = "sqlite" to postgresql with directUrl
 const postgresSchema = originalSchema
   .replace(
