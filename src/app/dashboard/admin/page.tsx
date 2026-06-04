@@ -12,13 +12,15 @@ export default async function AdminDashboardPage() {
     redirect("/login");
   }
 
+  const stats = await getDashboardStats();
   const { 
     totalReports, 
     todaysWorkers, 
     reportsSubmittedToday, 
     recentReports,
-    activeSupervisors
-  } = await getDashboardStats();
+    activeSupervisors,
+    error
+  } = stats;
 
   return (
     <div className="space-y-8 animate-fade-in max-w-5xl">
@@ -30,6 +32,18 @@ export default async function AdminDashboardPage() {
           Here&apos;s what&apos;s happening at your construction site today.
         </p>
       </div>
+
+      {error && (
+        <div className="bg-red-50 text-red-800 p-5 rounded-2xl text-xs font-semibold border border-red-150 flex flex-col gap-1 select-none">
+          <p className="font-bold flex items-center gap-1.5">
+            <span>⚠️ Database Connectivity Warning</span>
+          </p>
+          <p className="text-red-600 font-medium">
+            Could not load site data: &quot;{error}&quot;. 
+            Please ensure you have configured `DATABASE_URL` in your Netlify site settings, and that your database host is active.
+          </p>
+        </div>
+      )}
 
       <StatsCards
         totalReports={totalReports}

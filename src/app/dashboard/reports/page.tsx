@@ -24,7 +24,9 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
     redirect("/login");
   }
 
-  const { reports, meta } = await getReportsList({ page, limit: 8, search });
+  const reportsResult = await getReportsList({ page, limit: 8, search });
+  const { reports, meta } = reportsResult;
+  const error = (reportsResult as any).error;
 
   const isSupervisor = session.role === "SITE_SUPERVISOR";
 
@@ -63,7 +65,19 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
 
       <ReportFilterBar initialSearch={search} />
 
-      {reports.length === 0 ? (
+      {error && (
+        <div className="bg-red-50 text-red-800 p-5 rounded-2xl text-xs font-semibold border border-red-150 flex flex-col gap-1 select-none animate-pulse">
+          <p className="font-bold flex items-center gap-1.5">
+            <span>⚠️ Database Connectivity Warning</span>
+          </p>
+          <p className="text-red-600 font-medium">
+            Could not load reports list: &quot;{error}&quot;. 
+            Please ensure you have configured `DATABASE_URL` in your Netlify site settings, and that your database host is active.
+          </p>
+        </div>
+      )}
+
+      {reports.length === 0 && !error ? (
         <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-16 text-center shadow-card">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-slate-50 text-slate-400 border border-slate-200">
             <Clipboard className="h-6 w-6" />

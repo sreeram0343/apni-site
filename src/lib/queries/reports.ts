@@ -22,33 +22,45 @@ export async function getDashboardStats() {
     ? { date: { gte: startOfToday, lte: endOfToday } } 
     : { supervisorId: userId, date: { gte: startOfToday, lte: endOfToday } };
 
-  const [totalReports, reportsToday, recentReports, activeSupervisors] = await Promise.all([
-    db.dailyReport.count({ where: filterQuery }),
-    db.dailyReport.findMany({
-      where: filterQueryToday,
-      select: { workersPresent: true },
-    }),
-    db.dailyReport.findMany({
-      where: filterQuery,
-      include: {
-        supervisor: { select: { name: true } },
-      },
-      orderBy: { date: "desc" },
-      take: 5,
-    }),
-    db.user.count({ where: { role: "SITE_SUPERVISOR" } }),
-  ]);
+  try {
+    const [totalReports, reportsToday, recentReports, activeSupervisors] = await Promise.all([
+      db.dailyReport.count({ where: filterQuery }),
+      db.dailyReport.findMany({
+        where: filterQueryToday,
+        select: { workersPresent: true },
+      }),
+      db.dailyReport.findMany({
+        where: filterQuery,
+        include: {
+          supervisor: { select: { name: true } },
+        },
+        orderBy: { date: "desc" },
+        take: 5,
+      }),
+      db.user.count({ where: { role: "SITE_SUPERVISOR" } }),
+    ]);
 
-  const todaysWorkers = reportsToday.reduce((sum, r) => sum + r.workersPresent, 0);
-  const reportsSubmittedToday = reportsToday.length;
+    const todaysWorkers = reportsToday.reduce((sum, r) => sum + r.workersPresent, 0);
+    const reportsSubmittedToday = reportsToday.length;
 
-  return {
-    totalReports,
-    todaysWorkers,
-    reportsSubmittedToday,
-    recentReports,
-    activeSupervisors,
-  };
+    return {
+      totalReports,
+      todaysWorkers,
+      reportsSubmittedToday,
+      recentReports,
+      activeSupervisors,
+    };
+  } catch (err) {
+    console.error("Database error in getDashboardStats:", err);
+    return {
+      totalReports: 0,
+      todaysWorkers: 0,
+      reportsSubmittedToday: 0,
+      recentReports: [],
+      activeSupervisors: 0,
+      error: err instanceof Error ? err.message : "Database connection failed",
+    };
+  }
 }
 
 export async function getReportsList(params: {
@@ -82,29 +94,42 @@ export async function getReportsList(params: {
     ];
   }
 
-  const [reports, totalCount] = await Promise.all([
-    db.dailyReport.findMany({
-      where,
-      include: {
-        supervisor: { select: { name: true } },
+  try {
+    const [reports, totalCount] = await Promise.all([
+      db.dailyReport.findMany({
+        where,
+        include: {
+          supervisor: { select: { name: true } },
+        },
+        orderBy: { date: "desc" },
+        skip,
+        take: limit,
+      }),
+      db.dailyReport.count({ where }),
+    ]);
+
+    const totalPages = Math.ceil(totalCount / limit);
+
+    return {
+      reports,
+      meta: {
+        totalCount,
+        totalPages,
+        currentPage: page,
       },
-      orderBy: { date: "desc" },
-      skip,
-      take: limit,
-    }),
-    db.dailyReport.count({ where }),
-  ]);
-
-  const totalPages = Math.ceil(totalCount / limit);
-
-  return {
-    reports,
-    meta: {
-      totalCount,
-      totalPages,
-      currentPage: page,
-    },
-  };
+    };
+  } catch (err) {
+    console.error("Database error in getReportsList:", err);
+    return {
+      reports: [],
+      meta: {
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: page,
+      },
+      error: err instanceof Error ? err.message : "Database connection failed",
+    };
+  }
 }
 
 export async function getReportDetail(id: string) {
@@ -116,20 +141,25 @@ export async function getReportDetail(id: string) {
   const isAdmin = session.role === "BUILDER_ADMIN";
   const userId = session.id;
 
-  const report = await db.dailyReport.findUnique({
-    where: { id },
-    include: {
-      supervisor: { select: { name: true, email: true } },
-    },
-  });
+  try {
+    const report = await db.dailyReport.findUnique({
+      where: { id },
+      include: {
+        supervisor: { select: { name: true, email: true } },
+      },
+    });
 
-  if (!report) {
+    if (!report) {
+      return null;
+    }
+
+    if (!isAdmin && report.supervisorId !== userId) {
+      throw new Error("Access Denied");
+    }
+
+    return report;
+  } catch (err) {
+    console.error("Database error in getReportDetail:", err);
     return null;
   }
-
-  if (!isAdmin && report.supervisorId !== userId) {
-    throw new Error("Access Denied");
-  }
-
-  return report;
 }
