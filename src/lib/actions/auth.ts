@@ -3,6 +3,7 @@
 import { cookies } from "next/headers";
 import { demoPasswords, demoUsers, SESSION_COOKIE_NAME } from "@/auth/auth-service";
 import { AuthUser } from "@/auth/auth-types";
+import { db } from "@/lib/db";
 
 export async function loginAction(formData: Record<string, string>) {
   const { email, password } = formData;
@@ -35,6 +36,21 @@ export async function loginAction(formData: Record<string, string>) {
   };
 
   try {
+    // Automatically provision user in the database (Self-seeding)
+    await db.user.upsert({
+      where: { email: normalizedEmail },
+      update: {
+        name: demoUser.name,
+        role: demoUser.role,
+      },
+      create: {
+        id: demoUser.id,
+        name: demoUser.name,
+        email: normalizedEmail,
+        role: demoUser.role,
+      },
+    });
+
     const cookieStore = await cookies();
     cookieStore.set(SESSION_COOKIE_NAME, encodeURIComponent(JSON.stringify(user)), {
       path: "/",
