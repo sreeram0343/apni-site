@@ -8,10 +8,7 @@ import {
   HardHat, 
   LayoutDashboard, 
   FileText, 
-  Clipboard, 
   PlusCircle, 
-  Users as UsersIcon, 
-  Settings as SettingsIcon, 
   LogOut, 
   Menu, 
   X 
@@ -34,29 +31,14 @@ export function Sidebar({ role }: SidebarProps) {
     },
     { 
       href: "/dashboard/reports", 
-      label: "Daily Reports", 
-      icon: FileText 
-    },
-    { 
-      href: "/dashboard/reports", 
       label: "Reports", 
-      icon: Clipboard 
+      icon: FileText 
     },
     { 
       href: "/dashboard/reports/new", 
       label: "Add Report", 
       icon: PlusCircle,
       supervisorOnly: true 
-    },
-    { 
-      href: "/dashboard/users", 
-      label: "Users", 
-      icon: UsersIcon 
-    },
-    { 
-      href: "/dashboard/settings", 
-      label: "Settings", 
-      icon: SettingsIcon 
     },
   ];
 
@@ -73,14 +55,14 @@ export function Sidebar({ role }: SidebarProps) {
     <>
       {/* Mobile Header Bar */}
       <div className="flex h-16 items-center justify-between border-b border-slate-800 bg-slate-900 px-4 md:hidden text-white w-full fixed top-0 left-0 z-40 print-hidden">
-        <div className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2 hover:opacity-90 transition-opacity">
           <div className="flex h-8 w-8 items-center justify-center rounded bg-amber-500 text-slate-950">
             <HardHat className="h-4 w-4" />
           </div>
           <span className="font-extrabold tracking-tight">
             Apni<span className="text-amber-400">Site</span>
           </span>
-        </div>
+        </Link>
         <button
           onClick={() => setIsOpen(!isOpen)}
           className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-white cursor-pointer"
@@ -104,14 +86,14 @@ export function Sidebar({ role }: SidebarProps) {
         } h-full print-hidden`}
       >
         {/* Brand Logo Header (Desktop) */}
-        <div className="hidden h-16 items-center gap-2 px-6 border-b border-slate-800/60 md:flex">
+        <Link href="/" className="hidden h-16 items-center gap-2 px-6 border-b border-slate-800/60 md:flex hover:opacity-90 transition-opacity">
           <div className="flex h-8 w-8 items-center justify-center rounded bg-amber-500 text-slate-955 shadow-sm">
             <HardHat className="h-4.5 w-4.5" />
           </div>
           <span className="font-extrabold text-white tracking-tight text-base">
             Apni<span className="text-amber-400">Site</span>
           </span>
-        </div>
+        </Link>
 
         {/* Sidebar Links Menu */}
         <nav className="flex-1 space-y-1.5 px-4 py-6">
