@@ -35,7 +35,7 @@ try {
     execSync("npx prisma db push --accept-data-loss", { stdio: "inherit" });
     console.log("Prisma db push completed successfully.");
   } catch (dbError) {
-    console.warn("WARNING: prisma db push failed. If DATABASE_URL is not set yet, set it in Netlify settings. Error:", dbError.message);
+    console.warn("WARNING: prisma db push failed. If DATABASE_URL is not set yet, set it in Vercel settings. Error:", dbError.message);
   }
 
   console.log("Running prisma generate...");

@@ -28,7 +28,7 @@ export default async function SupervisorDashboardPage() {
           </p>
           <p className="text-red-600 font-medium">
             Could not load site data: &quot;{error}&quot;. 
-            Please ensure you have configured `DATABASE_URL` in your Netlify site settings, and that your database host is active.
+            Please ensure you have configured `DATABASE_URL` in your Vercel site settings, and that your database host is active.
           </p>
         </div>
       )}
