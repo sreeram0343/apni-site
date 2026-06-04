@@ -54,7 +54,7 @@ export function LoginForm() {
       setValue("email", "admin@apnisite.com");
       setValue("password", "password123");
     } else {
-      setValue("email", "sup1@apnisite.com");
+      setValue("email", "supervisor@apnisite.com");
       setValue("password", "password123");
     }
   };
@@ -182,7 +182,7 @@ export function LoginForm() {
               Supervisor
             </span>
             <span className="block text-2xs text-slate-500 mt-1 truncate">
-              sup1@apnisite.com
+              supervisor@apnisite.com
             </span>
             <span className="block text-2xs text-slate-400 mt-0.5">
               password123

@@ -57,7 +57,7 @@ For test testing and validation, use the pre-configured accounts below:
 | Role | Email | Password |
 | :--- | :--- | :--- |
 | **Builder / Admin** | `admin@apnisite.com` | `password123` |
-| **Site Supervisor** | `sup1@apnisite.com` | `password123` |
+| **Site Supervisor** | `supervisor@apnisite.com` | `password123` |
 | **Site Supervisor 2** | `sup2@apnisite.com` | `password123` |
 
 ---
