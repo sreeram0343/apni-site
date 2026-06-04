@@ -22,7 +22,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (signupRole && (signupRole === "ADMIN" || signupRole === "SUPERVISOR")) {
           const dbUser = await db.user.findUnique({ where: { email: user.email } });
           if (dbUser) {
-            // Detect if user was newly created (within last 15 seconds)
             const isNewUser = dbUser.createdAt.getTime() > Date.now() - 15000;
             if (isNewUser) {
               await db.user.update({
