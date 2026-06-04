@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "figma": {
+      "serverUrl": "https://mcp.figma.com/mcp"
+    },
+    "figma-local": {
+      "command": "cmd.exe",
+      "args": [
+        "/c",
+        "npx",
+        "-y",
+        "figma-developer-mcp",
+        "--stdio"
+      ],
+      "env": {
+        "FIGMA_API_KEY": ""
+      }
+    }
+  }
+}
