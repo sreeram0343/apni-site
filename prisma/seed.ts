@@ -1,5 +1,4 @@
 import { PrismaClient } from "@prisma/client";
-import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
@@ -10,15 +9,11 @@ async function main() {
 
   console.log("Database cleared.");
 
-  // Create users
-  const adminPassword = await bcrypt.hash("password123", 10);
-  const supervisorPassword = await bcrypt.hash("password123", 10);
-
+  // Seed existing accounts (Google OAuth login with these emails will link automatically)
   await prisma.user.create({
     data: {
       name: "Rajesh Kumar (Admin)",
       email: "admin@apnisite.com",
-      password: adminPassword,
       role: "ADMIN",
     },
   });
@@ -27,7 +22,6 @@ async function main() {
     data: {
       name: "Amit Sharma (Supervisor)",
       email: "supervisor@apnisite.com",
-      password: supervisorPassword,
       role: "SUPERVISOR",
     },
   });
@@ -36,13 +30,11 @@ async function main() {
     data: {
       name: "Vikram Singh (Supervisor)",
       email: "sup2@apnisite.com",
-      password: supervisorPassword,
       role: "SUPERVISOR",
     },
   });
 
   console.log("Users created.");
-
   console.log("No historical reports seeded for a fresh startup.");
 }
 

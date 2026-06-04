@@ -1,38 +1,13 @@
 import NextAuth from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
+import { PrismaAdapter } from "@auth/prisma-adapter";
 import { db } from "@/lib/db";
-import bcrypt from "bcryptjs";
-import { z } from "zod";
 import { authConfig } from "./auth.config";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  adapter: PrismaAdapter(db),
   ...authConfig,
   providers: [
-    CredentialsProvider({
-      async authorize(credentials) {
-        const parsedCredentials = z
-          .object({ email: z.string().email(), password: z.string().min(6) })
-          .safeParse(credentials);
-
-        if (!parsedCredentials.success) return null;
-
-        const { email, password } = parsedCredentials.data;
-        const user = await db.user.findUnique({ where: { email } });
-        if (!user) return null;
-
-        const passwordsMatch = await bcrypt.compare(password, user.password);
-        if (passwordsMatch) {
-          return {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-          };
-        }
-
-        return null;
-      },
-    }),
+    ...authConfig.providers,
   ],
+  session: { strategy: "jwt" },
 });
-

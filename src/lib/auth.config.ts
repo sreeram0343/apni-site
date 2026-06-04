@@ -1,4 +1,5 @@
 import type { NextAuthConfig } from "next-auth";
+import GoogleProvider from "next-auth/providers/google";
 
 export const authConfig = {
   pages: {
@@ -9,7 +10,8 @@ export const authConfig = {
       if (user) {
         token.id = user.id;
         token.role = user.role;
-        token.name = user.name;
+        token.name = user.name || "";
+        token.picture = user.image || "";
       }
       return token;
     },
@@ -18,10 +20,16 @@ export const authConfig = {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
         session.user.name = (token.name as string) || "";
+        session.user.image = (token.picture as string) || "";
       }
       return session;
     },
   },
-  providers: [], // Placed here as empty to satisfy type constraints, credentials defined in auth.ts
+  providers: [
+    GoogleProvider({
+      clientId: process.env.AUTH_GOOGLE_ID,
+      clientSecret: process.env.AUTH_GOOGLE_SECRET,
+    }),
+  ],
   session: { strategy: "jwt" },
 } satisfies NextAuthConfig;

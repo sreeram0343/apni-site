@@ -6,7 +6,7 @@ interface Report {
   date: Date;
   workersPresent: number;
   tasksCompleted: string;
-  supervisor: { name: string };
+  supervisor: { name: string | null };
 }
 
 interface RecentTableProps {
@@ -63,7 +63,7 @@ export function RecentTable({ reports }: RecentTableProps) {
                   <td className="px-6 py-4">
                     <span className="flex items-center gap-1.5 text-slate-700 font-semibold">
                       <User className="h-4 w-4 text-slate-400" />
-                      {report.supervisor.name}
+                      {report.supervisor.name || "Supervisor"}
                     </span>
                   </td>
 
