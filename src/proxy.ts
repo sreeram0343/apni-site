@@ -44,7 +44,7 @@ export default auth((req) => {
 
 export const config = {
   matcher: [
-    // Skip all API routes except auth ones, and skip standard static files
-    "/((?!api/reports|_next/static|_next/image|favicon.ico|uploads/).*)",
+    // Skip all API routes, static files, images, favicon, and uploads
+    "/((?!api/|_next/static|_next/image|favicon.ico|uploads/).*)",
   ],
 };
